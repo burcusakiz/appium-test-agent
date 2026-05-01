@@ -11,7 +11,10 @@ from datetime import datetime
 from flask import Flask, render_template, jsonify, Response, request
 import json
 
-app = Flask(__name__)
+# Setup template and static folders relative to app.py location
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
 # Configuration
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'reports', datetime.now().strftime('%Y-%m-%d'))
