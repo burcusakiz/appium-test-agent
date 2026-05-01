@@ -29,6 +29,7 @@ Bu proje için özel hazırlanmış skill dosyaları:
 ~/DEVELOPER/appium-test-agent/
 ├── CLAUDE.md                       ← Bu dosya
 ├── apps/                           ← APK dosyaları (demo.apk)
+├── dashboard-app/                  ← Dashboard web uygulaması
 ├── mock_api_server.py              ← Flask mock REST API server
 ├── test-scenarios/                 ← BDD senaryoları (İnsan okunabilir)
 │   └── TS-0001-LOGIN/
