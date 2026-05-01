@@ -1,0 +1,18 @@
+# Appium Test Framework Dependencies
+
+# Core Appium client
+appium-python-client>=4.0.0
+
+# Pytest testing framework
+pytest>=7.4.0
+pytest-html>=4.1.0
+pytest-metadata>=3.1.0
+
+# Selenium dependencies (used by Appium)
+selenium>=4.15.0
+
+# HTTP client for API testing
+requests>=2.31.0
+
+# Utilities
+Pillow>=10.0.0

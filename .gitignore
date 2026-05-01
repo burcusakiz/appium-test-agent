@@ -1,0 +1,35 @@
+# Auto-generated
+reports/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# APK files (too large for git)
+apps/*.apk
+apps/*.ipa
+
+# Environment
+.env
+venv/
+.venv/
+*/venv/
+*.log
+flask.log
+
+# Android build artifacts
+android-app/build/
+android-app/app/build/
+android-app/.gradle/
+android-app/gradle-app.txt
+android-app/gradlew
+android-app/gradlew.bat
+android-app/local.properties
+android-app/.idea/
+android-app/*.iml
+android-app/app/*.iml
+android-app/.externalNativeBuild/
+android-app/.cxx/
+android-app/app/release/
+android-app/app/debug/
