@@ -178,6 +178,48 @@ def emulator_screenshot():
         return jsonify({'error': 'No screenshot available'}), 404
 
 
+@app.route('/api/reports/list')
+def list_reports():
+    """List all available reports"""
+    reports_dir = os.path.join(os.path.dirname(__file__), '..', 'reports')
+
+    if not os.path.exists(reports_dir):
+        return jsonify({'error': 'No reports directory'}), 404
+
+    # Get all date directories with their report info
+    report_list = []
+    dates = sorted([d for d in os.listdir(reports_dir) if os.path.isdir(os.path.join(reports_dir, d))], reverse=True)
+
+    for date in dates:
+        report_path = os.path.join(reports_dir, date, 'report.html')
+        if os.path.exists(report_path):
+            # Get file size
+            size = os.path.getsize(report_path)
+            # Get file modification time
+            mtime = os.path.getmtime(report_path)
+
+            # Parse report to get test counts (simple HTML parsing)
+            try:
+                with open(report_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    passed = content.count("style='color:#198754'")
+                    failed = content.count("style='color:#f85149'")
+            except:
+                passed = 0
+                failed = 0
+
+            report_list.append({
+                'date': date,
+                'path': f'reports/{date}/report.html',
+                'size': size,
+                'modified': datetime.fromtimestamp(mtime).isoformat(),
+                'passed': passed,
+                'failed': failed
+            })
+
+    return jsonify({'reports': report_list, 'count': len(report_list)})
+
+
 @app.route('/api/reports/latest')
 def latest_report():
     """Get latest report information"""
@@ -205,6 +247,43 @@ def latest_report():
     return jsonify({'error': 'Report not found'}), 404
 
 
+@app.route('/api/reports/<report_date>/html')
+def get_report_html(report_date):
+    """Get HTML content of a specific report"""
+    reports_dir = os.path.join(os.path.dirname(__file__), '..', 'reports')
+    report_path = os.path.join(reports_dir, report_date, 'report.html')
+
+    if not os.path.exists(report_path):
+        return jsonify({'error': 'Report not found'}), 404
+
+    try:
+        with open(report_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return jsonify({
+            'date': report_date,
+            'html': html_content,
+            'exists': True
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/reports/<report_date>')
+def view_report(report_date):
+    """Serve report HTML directly"""
+    reports_dir = os.path.join(os.path.dirname(__file__), '..', 'reports')
+    report_path = os.path.join(reports_dir, report_date, 'report.html')
+
+    if not os.path.exists(report_path):
+        return "Report not found", 404
+
+    try:
+        with open(report_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Error reading report: {str(e)}", 500
+
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=False)

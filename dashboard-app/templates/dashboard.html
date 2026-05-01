@@ -298,6 +298,110 @@
             white-space: pre-wrap;
         }
 
+        /* Reports Panel Styles */
+        .reports-panel {
+            width: 300px;
+            border-right: 1px solid #0f3460;
+            background: #0d1117;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reports-panel-header {
+            padding: 15px;
+            background: #16213e;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .reports-panel-header h2 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #e94560;
+        }
+
+        .report-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .report-item {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .report-item:hover {
+            border-color: #e94560;
+            background: #1a1a3e;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .report-date {
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .report-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #0f3460;
+            color: #888;
+        }
+
+        .report-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .report-passed {
+            color: #198754;
+        }
+
+        .report-failed {
+            color: #dc3545;
+        }
+
+        .report-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #0f3460;
+        }
+
+        .report-size {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .view-btn {
+            background: #0f3460;
+            border: none;
+            color: #eee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .view-btn:hover {
+            background: #1a4a8a;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .main-container {
@@ -335,6 +439,19 @@
     </header>
 
     <div class="main-container">
+        <div class="reports-panel">
+            <div class="reports-panel-header">
+                <h2>Raporlar</h2>
+                <button class="view-btn" id="refresh-reports">Yenile</button>
+            </div>
+            <div class="report-list" id="report-list">
+                <div class="loading-screen">
+                    <div class="spinner"></div>
+                    <p>Raporlar yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+
         <div class="test-panel">
             <div class="test-panel-header">
                 <h2>Test Senaryolar</h2>
@@ -385,6 +502,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadTests();
+            loadReports();
             updateStatus();
             loadLatestScreenshot();
             startScreenshotPolling();
@@ -393,6 +511,7 @@
             document.getElementById('run-all').addEventListener('click', runAllTests);
             document.getElementById('refresh-status').addEventListener('click', updateStatus);
             document.getElementById('refresh-screenshot').addEventListener('click', loadLatestScreenshot);
+            document.getElementById('refresh-reports').addEventListener('click', loadReports);
         });
 
         async function loadTests() {
@@ -595,6 +714,50 @@
         // This prevents the flickering effect
         function startScreenshotPolling() {
             // Initial load only, no interval
+        }
+
+        async function loadReports() {
+            const reportList = document.getElementById('report-list');
+            reportList.innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Raporlar yükleniyor...</p></div>';
+
+            try {
+                const response = await fetch('/api/reports/list');
+                const data = await response.json();
+
+                if (data.count === 0) {
+                    reportList.innerHTML = '<div class="loading-screen"><p style="color: #666;">Henüz rapor yok</p></div>';
+                    return;
+                }
+
+                reportList.innerHTML = '';
+                data.reports.forEach(report => {
+                    const reportItem = document.createElement('div');
+                    reportItem.className = 'report-item';
+                    reportItem.innerHTML = `
+                        <div class="report-header">
+                            <span class="report-date">${report.date}</span>
+                            <span class="report-badge">${(report.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                        <div class="report-stats">
+                            <span class="report-passed">✓ ${report.passed}</span>
+                            <span class="report-failed">✗ ${report.failed}</span>
+                        </div>
+                        <div class="report-footer">
+                            <span class="report-size">${new Date(report.modified).toLocaleString('tr-TR')}</span>
+                            <button class="view-btn" onclick="openReport('${report.date}')">Görüntüle</button>
+                        </div>
+                    `;
+                    reportItem.addEventListener('click', () => openReport(report.date));
+                    reportList.appendChild(reportItem);
+                });
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                reportList.innerHTML = '<p style="color: #f85149; padding: 15px;">Raporlar yüklenemedi</p>';
+            }
+        }
+
+        function openReport(date) {
+            window.open(`/reports/${date}`, '_blank');
         }
     </script>
 </body>
