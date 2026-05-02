@@ -10,6 +10,9 @@ __pycache__/
 apps/*.apk
 apps/*.ipa
 
+# Generated documentation artifacts
+docs/*.docx
+
 # Environment
 .env
 venv/
@@ -17,6 +20,9 @@ venv/
 */venv/
 *.log
 flask.log
+
+# Local Claude Code permissions/settings
+.claude/settings.local.json
 
 # Android build artifacts
 android-app/build/

@@ -5,12 +5,24 @@ Sen bir **kıdemli test otomasyon mühendisisin**. Görevin mobil uygulamaları 
 
 ---
 
-## SKILL DOSYALARI
+## CLAUDE CODE AGENT / SKILL YAPISI
 
-Bu proje için özel hazırlanmış skill dosyaları:
-- [`skills/android-dev.md`](./skills/android-dev.md) - Android uygulama geliştirme ve test best practices
-- [`skills/appium-test.md`](./skills/appium-test.md) - Appium test yazma kalıpları (Page Object Model)
-- [`skills/api-test.md`](./skills/api-test.md) - REST API test kalıpları
+Bu projede Claude Code varlıkları proje seviyesinde `.claude/` altında tutulur:
+
+- `.claude/skills/mobile-test-agent/SKILL.md` - senaryo yazma, Appium otomasyon, test çalıştırma ve hata analizi workflow'u
+- `.claude/agents/scenario-author.md` - insan okunabilir test senaryosu üretir
+- `.claude/agents/appium-automation-engineer.md` - senaryoyu pytest/Appium otomasyon koduna çevirir
+- `.claude/agents/test-runner-debugger.md` - testleri çalıştırır, raporları inceler, otomasyon hatalarını düzeltir
+- `.claude/commands/create-mobile-scenario.md` - `/create-mobile-scenario`
+- `.claude/commands/automate-mobile-scenario.md` - `/automate-mobile-scenario`
+- `.claude/commands/run-mobile-tests.md` - `/run-mobile-tests`
+- `.claude/commands/fix-failing-mobile-test.md` - `/fix-failing-mobile-test`
+
+Referans rehberler de kökte değil, ilgili skill altında tutulur:
+
+- `.claude/skills/mobile-test-agent/references/android-dev.md`
+- `.claude/skills/mobile-test-agent/references/appium-test.md`
+- `.claude/skills/mobile-test-agent/references/api-test.md`
 
 ---
 
@@ -55,7 +67,13 @@ Bu proje için özel hazırlanmış skill dosyaları:
 │       └── screenshots/
 │           └── screenshot_*.png
 ├── docs/                           ← Session logları ve dökümantasyon
-├── skills/                         ← Özel skill rehberleri
+├── .claude/                        ← Claude Code agent, skill ve command dosyaları
+│   ├── agents/
+│   ├── commands/
+│   └── skills/
+│       └── mobile-test-agent/
+│           ├── SKILL.md
+│           └── references/
 ├── Makefile                        ← Build automation
 ├── pytest.ini                      ← Pytest configuration
 ├── run_tests.py                    ← Test runner scripti
@@ -270,13 +288,52 @@ reports/
 
 ---
 
+## CLAUDE CODE KULLANIM NOTLARI
+
+### pkill / Kill İşlemleri
+
+**UYARI:** `pkill` veya `kill` komutları çalıştırırken **mutlaka process adında belirleyici bir substring kullanmalısın** kiClaude Code process'ini de etkilemesin.
+
+```bash
+# YANLIŞ —Claude Code'u da kill eder!
+pkill -f python
+
+# DOĞRU — spesifik process adı kullan
+pkill -f "mock_api_server.py"
+pkill -f appium
+pkill -f "dashboard-app/app.py"
+```
+
+**Kural:** Process adında projeyle özel ilişkili bir substring kullan (örn. `mock_api_server.py`, `appium`, `dashboard-app`). Genel `python`, `node`, `java` gibi terminerleri asla tek başına kullanma.
+
+---
+
 ## KAYNAKLAR
 
 ### Dokümantasyon
 - [docs/](./docs/) - Proje dökümantasyonu ve session logları
-- [skills/](./skills/) - Specialized skill guides for each domain
+- [.claude/skills/mobile-test-agent/](./.claude/skills/mobile-test-agent/) - Claude Code mobile test agent skill
 
 ### Quick Reference
-- **Android**: See `skills/android-dev.md` for Activity lifecycle, UI patterns, Appium integration
-- **Appium**: See `skills/appium-test.md` for POM, Page Objects, test organization
-- **API**: See `skills/api-test.md` for REST testing patterns, mocking, validation
+- **Android**: See `.claude/skills/mobile-test-agent/references/android-dev.md`
+- **Appium**: See `.claude/skills/mobile-test-agent/references/appium-test.md`
+- **API**: See `.claude/skills/mobile-test-agent/references/api-test.md`
+
+---
+
+## DASHBOARD
+
+Dashboard web arayüzü: `http://localhost:8000`
+
+```bash
+# Dashboard'u başlat
+make dashboard
+
+# Veya manuel
+./venv/bin/python dashboard-app/app.py
+```
+
+**Özellikler:**
+- Sol panel: Raporlar (tarih, boyut, geçti/başarısız sayıları)
+- Orta panel: Test senaryoları
+- Sağ panel: Emulator ekranı ve test sonuçları logu

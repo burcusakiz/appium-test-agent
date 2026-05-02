@@ -7,6 +7,8 @@ appium-python-client>=4.0.0
 pytest>=7.4.0
 pytest-html>=4.1.0
 pytest-metadata>=3.1.0
+pytest-repeat>=0.9.1  # For test repetition
+pytest-xdist>=3.3.0   # For parallel test execution
 
 # Selenium dependencies (used by Appium)
 selenium>=4.15.0
@@ -16,3 +18,7 @@ requests>=2.31.0
 
 # Utilities
 Pillow>=10.0.0
+
+# Additional dependencies for automation
+python-dotenv>=1.0.0  # Environment variable management
+psutil>=5.9.5         # Process monitoring

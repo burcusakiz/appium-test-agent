@@ -1,189 +1,93 @@
 #!/usr/bin/env python3
-"""
-Test Runner Script for Appium Test Agent
-Executes all tests and generates HTML report using pytest and pytest-html
-"""
+"""Project test runner for Appium/API automation."""
 
+from __future__ import annotations
+
+import argparse
+import os
 import subprocess
 import sys
-import os
-import argparse
 from datetime import datetime
+from pathlib import Path
 
 
-def parse_args():
-    """Parse command line arguments"""
+ROOT_DIR = Path(__file__).resolve().parent
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Appium Test Agent - Execute tests and generate HTML report"
+        description="Run Appium/API tests and write reports under reports/YYYY-MM-DD/."
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "target",
+        nargs="*",
+        help="Optional pytest targets, for example tests/android/login/test_TC001_valid_login.py",
+    )
+    parser.add_argument(
+        "--platform",
+        choices=["all", "android", "api"],
+        default=os.getenv("TEST_PLATFORM", "android"),
+        help="Default test group when no explicit target is provided.",
+    )
+    parser.add_argument("-k", "--keyword", help="Pytest -k expression.")
+    parser.add_argument("-m", "--mark", help="Pytest marker expression.")
+    parser.add_argument(
+        "--html",
         action="store_true",
-        help="Enable verbose output"
+        help="Also generate an HTML report for API-only runs.",
     )
     parser.add_argument(
-        "-k", "--keywords",
-        type=str,
-        default="",
-        help="Only run tests matching the given keyword expression"
+        "--extra",
+        nargs=argparse.REMAINDER,
+        help="Arguments after --extra are passed directly to pytest.",
     )
-    parser.add_argument(
-        "-m", "--markers",
-        type=str,
-        default="",
-        help="Only run tests matching the given marker expression"
-    )
-    parser.add_argument(
-        "-x", "--exitfirst",
-        action="store_true",
-        help="Exit instantly on first error or failed test"
-    )
-    parser.add_argument(
-        "--app-path",
-        type=str,
-        default=None,
-        help="Path to the Android APK file"
-    )
-    parser.add_argument(
-        "--platform-version",
-        type=str,
-        default=None,
-        help="Android platform version"
-    )
-    parser.add_argument(
-        "--device-name",
-        type=str,
-        default=None,
-        help="Device name for Appium"
-    )
-    parser.add_argument(
-        "--report-name",
-        type=str,
-        default=None,
-        help="Name of the output HTML report"
-    )
-    parser.add_argument(
-        "--date-report",
-        action="store_true",
-        help="Create date-based report in reports/YYYY-MM-DD/report.html"
-    )
-    parser.add_argument(
-        "--headless",
-        action="store_true",
-        help="Run tests in headless mode (no UI)"
-    )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def get_report_path(args):
-    """Generate report path based on arguments"""
-    if args.date_report:
-        date_dir = datetime.now().strftime("%Y-%m-%d")
-        report_dir = os.path.join("reports", date_dir)
-        os.makedirs(report_dir, exist_ok=True)
-        return os.path.join(report_dir, "report.html")
+def build_pytest_args(args: argparse.Namespace) -> list[str]:
+    report_date = datetime.now().strftime("%Y-%m-%d")
+    report_dir = ROOT_DIR / "reports" / report_date
+    report_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.report_name:
-        report_dir = os.path.join("reports")
-        os.makedirs(report_dir, exist_ok=True)
-        return os.path.join(report_dir, args.report_name)
+    pytest_args = ["pytest", "-v"]
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_name = f"test_report_{timestamp}.html"
-    return os.path.join("reports", report_name)
-
-
-def get_appium_options(args):
-    """Build Appium environment variables from arguments"""
-    env_vars = {}
-
-    if args.app_path:
-        env_vars["APP_PATH"] = args.app_path
-    if args.platform_version:
-        env_vars["PLATFORM_VERSION"] = args.platform_version
-    if args.device_name:
-        env_vars["DEVICE_NAME"] = args.device_name
-
-    return env_vars
-
-
-def run_tests(args):
-    """Run pytest with the specified arguments"""
-    print("=" * 60)
-    print("Appium Test Agent - Test Runner")
-    print("=" * 60)
-    print()
-
-    # Get report path
-    report_path = get_report_path(args)
-
-    # Build pytest command
-    cmd = ["pytest", "-v"]
-
-    # Add markers if specified
-    if args.markers:
-        cmd.extend(["-m", args.markers])
-    elif args.keywords:
-        cmd.extend(["-k", args.keywords])
-
-    # Add other options
-    if args.verbose:
-        cmd.append("-vv")
-    if args.exitfirst:
-        cmd.append("-x")
-
-    # Add pytest-html options
-    cmd.extend(["--html", report_path, "--self-contained-html", "--tb=short"])
-
-    # Add test directory
-    test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests")
-    cmd.append(test_dir)
-
-    print("Pytest command:")
-    print(" ".join(cmd))
-    print()
-
-    # Set environment variables
-    env = os.environ.copy()
-    env.update(get_appium_options(args))
-
-    print(f"Test Report: {report_path}")
-    print()
-
-    # Run tests
-    print("-" * 60)
-    print("Running tests...")
-    print("-" * 60)
-    print()
-
-    result = subprocess.run(cmd, env=env, cwd=os.path.dirname(os.path.abspath(__file__)))
-
-    print()
-    print("-" * 60)
-
-    if result.returncode == 0:
-        print("All tests passed!")
+    if args.target:
+        pytest_args.extend(args.target)
+    elif args.platform == "android":
+        pytest_args.append("tests/android")
+    elif args.platform == "api":
+        pytest_args.append("tests/api")
     else:
-        print(f"Tests failed with exit code: {result.returncode}")
+        pytest_args.append("tests")
 
-    print("-" * 60)
-    print()
+    if args.keyword:
+        pytest_args.extend(["-k", args.keyword])
 
-    # Print summary
-    print("Summary:")
-    print(f"  - Report: file://{os.path.abspath(report_path)}")
-    print(f"  - Tests directory: {test_dir}")
-    print()
+    if args.mark:
+        pytest_args.extend(["-m", args.mark])
 
-    return result.returncode
+    should_write_html = args.platform != "api" or args.html or bool(args.target)
+    if should_write_html:
+        report_name = "api-report.html" if args.platform == "api" and not args.target else "report.html"
+        pytest_args.extend(
+            [
+                f"--html={report_dir / report_name}",
+                "--self-contained-html",
+            ]
+        )
+
+    if args.extra:
+        pytest_args.extend(args.extra)
+
+    return pytest_args
 
 
-def main():
-    """Main entry point"""
-    args = parse_args()
-    exit_code = run_tests(args)
-    sys.exit(exit_code)
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv or sys.argv[1:])
+    pytest_args = build_pytest_args(args)
+    print("Running:", " ".join(pytest_args))
+    return subprocess.call(pytest_args, cwd=ROOT_DIR)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

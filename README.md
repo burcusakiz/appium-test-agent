@@ -10,6 +10,7 @@ Mobil uygulama (Android) ve REST API testlerini otomatikleştiren BDD (Behavior-
 - **BDD Senaryoları** - Human-readable test senaryoları
 - **Otomatik Raporlama** - HTML raporlar ve screenshot'lar
 - **Dashboard** - Web tabanlı test kontrol paneli
+- **Data-Driven Testing** - Parametreli testler
 
 ## Proje Yapısı
 
@@ -29,7 +30,10 @@ appium-test-agent/
 │   └── page_objects/          # Page Object Model
 ├── apps/                       # APK dosyaları (runtime)
 ├── reports/                    # Otomatik raporlar
-├── skills/                     # Specialized skill guides
+├── .claude/                    # Claude Code agents, commands, skills
+│   ├── agents/
+│   ├── commands/
+│   └── skills/
 ├── Makefile                    # Build automation
 ├── pytest.ini                  # Pytest configuration
 ├── run_tests.py                # Test runner script
